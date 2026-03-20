@@ -1,5 +1,0 @@
-﻿{
-    "ConnectionStrings": { "MasterConnection": "" },
-    "Jwt": {
-        "Issuer": "inlaks-auth",
-        "Audience": "inlaks-clients",

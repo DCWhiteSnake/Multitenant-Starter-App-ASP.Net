@@ -1,0 +1,38 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+packages/
+
+# MSBuild
+*.cache
+*.log
+
+# Test results
+TestResults/
+coverage/
+
+# User secrets
+appsettings.*.local.json
+secrets.json
+
+# OS
+.DS_Store
+Thumbs.db
