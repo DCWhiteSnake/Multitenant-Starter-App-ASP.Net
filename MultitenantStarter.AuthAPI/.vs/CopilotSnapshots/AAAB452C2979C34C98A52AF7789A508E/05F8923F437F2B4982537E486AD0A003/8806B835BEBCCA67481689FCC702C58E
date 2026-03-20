@@ -1,0 +1,9 @@
+﻿using Inlaks.MultitenantStarter.Auth.Infrastructure.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
+namespace Inlaks.MultitenantStarter.Auth.Infrastructure
+{
+    internal class AppDbContext:IdentityDbContext<ApplicationUser,ApplicationRole, Guid>
+    {
+    }
+}

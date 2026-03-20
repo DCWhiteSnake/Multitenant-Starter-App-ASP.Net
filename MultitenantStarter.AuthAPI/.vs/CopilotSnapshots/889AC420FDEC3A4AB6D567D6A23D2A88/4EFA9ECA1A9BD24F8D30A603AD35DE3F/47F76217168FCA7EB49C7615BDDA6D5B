@@ -1,0 +1,123 @@
+﻿using System.Security.Claims;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Options;
+
+namespace Inlaks.MultitenantStarter.Investments.API.Authentication
+{
+    public class ExternalTokenAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+    {
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
+
+        public ExternalTokenAuthenticationHandler(
+            IOptionsMonitor<AuthenticationSchemeOptions> options,
+            ILoggerFactory logger,
+            UrlEncoder encoder,
+            IHttpClientFactory httpClientFactory,
+            IConfiguration configuration)
+            : base(options, logger, encoder)
+        {
+            _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
+        }
+
+        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+        {
+            // Extract the JWT token from the Authorization header
+            if (!Request.Headers.TryGetValue("Authorization", out var authHeader))
+            {
+                return AuthenticateResult.Fail("Missing Authorization header");
+            }
+
+            var token = authHeader.ToString();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return AuthenticateResult.Fail("Invalid Authorization header");
+            }
+
+            // Remove "Bearer " prefix if present
+            if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                token = token.Substring("Bearer ".Length).Trim();
+            }
+
+            try
+            {
+                // Call the external validation endpoint
+                var authApiUrl = _configuration["AuthApiUrl"] ?? "https://localhost:7001";
+                var client = _httpClientFactory.CreateClient();
+                
+                var response = await client.PostAsync(
+                    $"{authApiUrl}/api/auth/validate-jwt?jwt={Uri.EscapeDataString(token)}",
+                    null);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return AuthenticateResult.Fail("Token validation failed");
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var validationResult = JsonSerializer.Deserialize<ValidationResponse>(content, new JsonSerializerOptions 
+                { 
+                    PropertyNameCaseInsensitive = true 
+                });
+
+                if (validationResult == null || !validationResult.IsValid)
+                {
+                    return AuthenticateResult.Fail("Invalid token");
+                }
+
+                // Inject the tenant ID into the request headers
+                if (!string.IsNullOrWhiteSpace(validationResult.TenantId))
+                {
+                    Context.Request.Headers["X-TenantId"] = validationResult.TenantId;
+                }
+
+                if (!string.IsNullOrWhiteSpace(validationResult.ApiKey))
+                {
+                    Context.Request.Headers["X-ApiKey"] = validationResult.ApiKey;
+                }
+
+                // Create claims from the validation response
+                var claims = new List<Claim>
+                {
+                    new Claim("tenantId", validationResult.TenantId ?? string.Empty),
+                    new Claim("apiKey", validationResult.ApiKey ?? string.Empty)
+                };
+
+                if (!string.IsNullOrWhiteSpace(validationResult.UserId))
+                {
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, validationResult.UserId));
+                    claims.Add(new Claim("userId", validationResult.UserId));
+                }
+
+                if (!string.IsNullOrWhiteSpace(validationResult.Username))
+                {
+                    claims.Add(new Claim(ClaimTypes.Name, validationResult.Username));
+                }
+
+                var identity = new ClaimsIdentity(claims, Scheme.Name);
+                var principal = new ClaimsPrincipal(identity);
+                var ticket = new AuthenticationTicket(principal, Scheme.Name);
+
+                return AuthenticateResult.Success(ticket);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error validating token");
+                return AuthenticateResult.Fail($"Token validation error: {ex.Message}");
+            }
+        }
+
+        private class ValidationResponse
+        {
+            public bool IsValid { get; set; }
+            public string? TenantId { get; set; }
+            public string? ApiKey { get; set; }
+            public string? UserId { get; set; }
+            public string? Username { get; set; }
+        }
+    }
+}

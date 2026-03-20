@@ -1,0 +1,14 @@
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
+namespace Inlaks.MultitenantStarter.Auth.Infrastructure.Entities
+{
+    public class ApplicationUser : IdentityUser<Guid>
+    {
+        public required Guid TenantId { get; set; }
+    }
+
+    public class ApplicationRole : IdentityRole<Guid>
+    {
+    }
+}

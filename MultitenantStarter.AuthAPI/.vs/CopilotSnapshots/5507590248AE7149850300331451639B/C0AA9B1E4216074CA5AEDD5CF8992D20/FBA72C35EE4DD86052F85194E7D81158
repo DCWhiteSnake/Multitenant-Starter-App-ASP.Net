@@ -1,0 +1,48 @@
+﻿using Inlaks.MultitenantStarter.Auth.Infrastructure;
+using Inlaks.MultitenantStarter.TenantService;
+using Microsoft.EntityFrameworkCore;
+using TenantDbContext = Inlaks.MultitenantStarter.Auth.Infrastructure.TenantDbContext;
+using TenantRegistryService = Inlaks.MultitenantStarter.Auth.Infrastructure.TenantRegistryService;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtOptions = jwtSection.Get<JwtOptions>();
+
+builder.Services.AddSingleton(jwtOptions);
+builder.Services.AddSingleton<JwtTokenGenerator>();
+
+// Configure TenantDbContext with MasterConnection
+var masterConnectionString = builder.Configuration.GetConnectionString("MasterConnection");
+builder.Services.AddDbContext<TenantDbContext>(options =>
+    options.UseSqlServer(masterConnectionString));
+
+// Register TenantRegistryService as scoped to match TenantDbContext lifetime
+builder.Services.AddScoped<TenantRegistryService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AppDbContextFactory>();
+
+var app = builder.Build();
+
+// Ensure the master tenant database is created
+using (var scope = app.Services.CreateScope())
+{
+    var tenantDbContext = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+    tenantDbContext.Database.EnsureCreated();
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();

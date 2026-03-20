@@ -1,0 +1,86 @@
+﻿using System.IdentityModel.Tokens.Jwt;
+using Inlaks.MultitenantStarter.Auth.Infrastructure;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+
+namespace Inlaks.MultitenantStarter.Investments.Infrastructure
+{
+    public class AppDbContextFactory
+    {
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly TenantRegistryService _tenantRegistryService;
+
+        public AppDbContextFactory(IHttpContextAccessor httpContextAccessor, TenantRegistryService tenantRegistryService)
+        {
+            _httpContextAccessor = httpContextAccessor;
+            _tenantRegistryService = tenantRegistryService;
+        }
+
+        public InvestmentsAppDbContext CreateDbContext()
+        {
+            string? tenantIdStr = null;
+            string? apiKey = null;
+
+            // First, try to get from headers injected by authentication handler
+            var tenantIdHeader = _httpContextAccessor.HttpContext?.Request.Headers["X-TenantId"].ToString();
+            var apiKeyHeader = _httpContextAccessor.HttpContext?.Request.Headers["X-ApiKey"].ToString();
+
+            if (!string.IsNullOrWhiteSpace(tenantIdHeader) && !string.IsNullOrWhiteSpace(apiKeyHeader))
+            {
+                tenantIdStr = tenantIdHeader;
+                apiKey = apiKeyHeader;
+            }
+            else
+            {
+                // Fallback: parse JWT from Authorization header
+                var authHeader = _httpContextAccessor.HttpContext?.Request.Headers?["Authorization"].ToString();
+                if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("Authorization header with Bearer token is required.");
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                var handler = new JwtSecurityTokenHandler();
+                JwtSecurityToken jwt;
+                try
+                {
+                    jwt = handler.ReadJwtToken(token);
+                }
+                catch
+                {
+                    throw new InvalidOperationException("Invalid JWT token in Authorization header.");
+                }
+
+                tenantIdStr = jwt.Claims.FirstOrDefault(c => c.Type == "tenantId")?.Value;
+                apiKey = jwt.Claims.FirstOrDefault(c => c.Type == "apiKey")?.Value;
+            }
+
+            if (string.IsNullOrWhiteSpace(tenantIdStr) || !Guid.TryParse(tenantIdStr, out var tenantId))
+            {
+                throw new InvalidOperationException("tenantId missing or invalid.");
+            }
+
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new InvalidOperationException("apiKey missing.");
+            }
+
+            var connString = _tenantRegistryService.GetConnectionString(tenantId, apiKey);
+            if (string.IsNullOrEmpty(connString))
+            {
+                throw new InvalidOperationException("Invalid Or Inactive Tenant");
+            }
+
+            var optionsBuilder = new DbContextOptionsBuilder<InvestmentsAppDbContext>();
+            optionsBuilder.UseSqlServer(connString);
+
+            var dbContext = Activator.CreateInstance(typeof(InvestmentsAppDbContext), optionsBuilder.Options) as InvestmentsAppDbContext;
+            if (dbContext == null)
+            {
+                throw new InvalidOperationException("Failed to create an instance of AppDbContext.");
+            }
+
+            return dbContext;
+        }
+    }
+}

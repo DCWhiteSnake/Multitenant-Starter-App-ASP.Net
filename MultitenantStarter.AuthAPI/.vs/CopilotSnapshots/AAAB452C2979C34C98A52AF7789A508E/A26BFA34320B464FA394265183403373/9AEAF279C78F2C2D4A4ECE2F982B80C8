@@ -1,0 +1,9 @@
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace Inlaks.MultitenantStarter.TenantService
+{
+    public class TenantDbContext : DbContext
+    {
+        public DbSet<Tenant> Tenants { get; set; }
+    }
+}

@@ -1,0 +1,46 @@
+﻿namespace Inlaks.MultitenantStarter.Auth.Infrastructure
+{
+    public class RedisCacheService
+    {
+        private readonly IRedisCacheRepository _redisCacheRepository;
+        public RedisCacheService(IRedisCacheRepository redisCacheRepository)
+        {
+            _redisCacheRepository = redisCacheRepository;
+        }
+        public async Task<bool> DeleteKeys(string search)
+        {
+            var del = await _redisCacheRepository.DeleteKeys(search);
+            return del;
+        }
+
+        public async Task<List<string>> FetchKeys(string search)
+        {
+            var fetch = await _redisCacheRepository.FetchKeys(search);
+            return fetch;
+        }
+
+        public async Task<string> Get(string key)
+        {
+            var items = await _redisCacheRepository.Get(key);
+            return items;
+        }
+
+        public async Task<List<string>> GetAllListElementsFromAllKeys()
+        {
+            var items = await _redisCacheRepository.GetAllListElementsFromAllKeys();
+            return items;
+        }
+
+        public async Task<bool> Refresh(string search)
+        {
+            var refr = await _redisCacheRepository.Refresh(search);
+            return refr;
+        }
+
+        public async Task<bool> Set(RadisCacheModel.CacheKeyVal payload)
+        {
+            var sett = await _redisCacheRepository.Set(payload);
+            return sett;
+        }
+    }
+}

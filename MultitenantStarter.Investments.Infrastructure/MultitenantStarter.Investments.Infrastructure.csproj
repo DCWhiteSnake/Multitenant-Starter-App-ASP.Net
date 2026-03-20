@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MultitenantStarter.InvestmentsCore\MultitenantStarter.InvestmentsCore.csproj" />
+    <ProjectReference Include="..\MultitenantStarter.Auth.Infrastructure\MultitenantStarter.Auth.Infrastructure.csproj" />
+    <ProjectReference Include="..\MultitenantStarter.TenantService\MultitenantStarter.TenantService.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,61 @@
+﻿using Inlaks.MultitenantStarter.Investments.Infrastructure;
+using Inlaks.MultitenantStarter.TenantService;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+
+// JWT validation
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var issuer = jwtSection.GetValue<string>("Issuer") ?? "inlaks-auth";
+var audience = jwtSection.GetValue<string>("Audience") ?? "inlaks-clients";
+var secret = jwtSection.GetValue<string>("Secret") ?? "PLEASE-REPLACE-WITH-A-SECURE-256-BIT-SECRET-KEY-CHANGE-ME";
+var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            IssuerSigningKey = key
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireTenant", policy => policy.RequireClaim("tenantId").RequireClaim("apiKey"));
+});
+
+// Multitenant context factory dependencies
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<TenantRegistryService>();
+builder.Services.AddScoped<AppDbContextFactory>();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();

@@ -1,0 +1,49 @@
+﻿using System.Text;
+using Inlaks.MultitenantStarter.Auth.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization(options =>
+{
+
+    options.AddPolicy("RequireTenant", policy => policy.RequireClaim("tenantId").RequireClaim("apiKey"));
+});
+
+builder.Services.AddHttpContextAccessor();
+var masterConnectionString = builder.Configuration.GetConnectionString("MasterConnection");
+builder.Services.AddDbContext<TenantDbContext>(options =>
+    options.UseSqlServer(masterConnectionString));
+
+builder.Services.AddScoped<TenantDbContext>();
+builder.Services.AddScoped<TenantRegistryService>();
+builder.Services.AddScoped<Inlaks.MultitenantStarter.Investments.Infrastructure.AppDbContextFactory>();
+
+var app = builder.Build();
+
+// Ensure master TenantDbContext is created
+using (var scope = app.Services.CreateScope())
+{
+    var tenantDbContext = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+    tenantDbContext.Database.EnsureCreated();
+}
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();

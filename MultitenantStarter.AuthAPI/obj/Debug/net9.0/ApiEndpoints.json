@@ -1,0 +1,65 @@
+[
+  {
+    "ContainingType": "Inlaks.MultitenantStarter.AuthAPI.Controllers.AuthController",
+    "Method": "SignIn",
+    "RelativePath": "api/Auth/log-in",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "apiKey",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "tenantId",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "username",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "password",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Inlaks.MultitenantStarter.AuthAPI.Controllers.AuthController",
+    "Method": "RegisterTenant",
+    "RelativePath": "api/Auth/register-tenant",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "organizationName",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Inlaks.MultitenantStarter.AuthAPI.Controllers.AuthController",
+    "Method": "ValidateJWT",
+    "RelativePath": "api/Auth/validate-jwt",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "jwt",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

@@ -1,0 +1,42 @@
+﻿using Inlaks.MultitenantStarter.Auth.Infrastructure;
+using Inlaks.MultitenantStarter.Auth.Infrastructure.Helpers.inlaks.acctmpr_util;
+using Inlaks.MultitenantStarter.Common.Entitities;
+using Microsoft.AspNetCore.Mvc;
+using TenantRegistryService = Inlaks.MultitenantStarter.Auth.Infrastructure.TenantRegistryService;
+
+namespace Inlaks.MultitenantStarter.AuthAPI.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AuthController(ILogger<AuthController> _logger, AuthService _authService, TenantRegistryService _tenantRegistryService, RedisCacheService _cacheService) : ControllerBase
+    {
+        [HttpPost("log-in")]
+        public async Task<IActionResult> SignIn([FromForm] string username, [FromForm] string password, RedisCacheService cacheService)
+        {
+            var response = await _authService.SignIn(username, password);
+            if (response.status) return Ok(response);
+            return Unauthorized();
+        }
+
+        [HttpPost("register-tenant")]
+        public IActionResult RegisterTenant(string organizationName)
+        {
+            var tenant = new Tenant
+            {
+                Name = organizationName,
+                ConnectionString = "Server=.;Database=TenantDb_" + organizationName + Guid.NewGuid().ToString() + ";Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;",
+                ApiKey = Guid.NewGuid().ToString(),
+                Id = Guid.NewGuid()
+            };
+            _tenantRegistryService.RegisterTenant(tenant);
+            return Ok(new { message = $"Please keep these details are they will not be provided again", apiKey = tenant.ApiKey, username = organizationName, password = "Secret123$", TenantId = tenant.Id });
+        }
+
+        [HttpPost("validate-jwt")]
+        public async Task<IActionResult> ValidateJWT(string jwt, CancellationToken cancellationToken)
+        {
+            var x = await _cacheService.GetAsync(jwt, cancellationToken);
+            return Ok(new { isValid = x != null });
+        }
+    }
+}

@@ -1,0 +1,20 @@
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+
+namespace Inlaks.MultitenantStarter.TenantService
+{
+    public class TenantRegistryService
+    {
+        private readonly TenantDbContext _tenantDbContext;
+
+        public TenantRegistryService(string masterConnectionString)
+        {
+            var factory = new TenantDbContextFactory(masterConnectionString);
+            _tenantDbContext = factory.CreateDbContext();
+            _tenantDbContext.Database.EnsureCreated();
+        }
+
+        public string GetConnectionString(Guid tenantId, string apiKey)
+        {
+            var tenant = _tenantDbContext.Tenants.FirstOrDefault(t => t.Id == tenantId && t.ApiKey == apiKey) ?? throw

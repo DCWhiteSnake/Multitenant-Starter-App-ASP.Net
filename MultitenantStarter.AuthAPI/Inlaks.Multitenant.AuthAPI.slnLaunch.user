@@ -1,0 +1,19 @@
+[
+  {
+    "Name": "All",
+    "Projects": [
+      {
+        "Path": "Inlaks.MultitenantStarter.AuthAPI.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "..\\Inlaks.MultitenantStarter.Gateway\\Inlaks.MultitenantStarter.Gateway.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "..\\Inlaks.MultitenantStarter.LoanAPI\\Inlaks.MultitenantStarter.Investments.API.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

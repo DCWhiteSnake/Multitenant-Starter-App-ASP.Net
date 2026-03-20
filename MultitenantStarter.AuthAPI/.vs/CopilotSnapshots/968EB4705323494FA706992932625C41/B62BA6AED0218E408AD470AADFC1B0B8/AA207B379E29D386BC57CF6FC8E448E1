@@ -1,0 +1,101 @@
+﻿{
+    "Routes": [
+        {
+            "DownstreamPathTemplate": "/api/auth/log-in",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                { "Host": "localhost", "Port": 5181 }
+            ],
+            "UpstreamPathTemplate": "/api/auth/log-in",
+            "UpstreamHttpMethod": [ "POST" ],
+            "SwaggerKey": "auth"
+        },
+        {
+            "DownstreamPathTemplate": "/api/auth/register-tenant",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                { "Host": "localhost", "Port": 5181 }
+            ],
+            "UpstreamPathTemplate": "/api/auth/register-tenant",
+            "UpstreamHttpMethod": [ "POST" ],
+            "SwaggerKey": "auth"
+        },
+        {
+            "DownstreamPathTemplate": "/api/auth/validate-jwt",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                { "Host": "localhost", "Port": 5181 }
+            ],
+            "UpstreamPathTemplate": "/api/auth/validate-jwt",
+            "UpstreamHttpMethod": [ "POST" ],
+            "SwaggerKey": "auth"
+        },
+        {
+            "DownstreamPathTemplate": "/api/products",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                { "Host": "localhost", "Port": 5022 }
+            ],
+            "UpstreamPathTemplate": "/api/products",
+            "UpstreamHttpMethod": [ "GET" ],
+            "SwaggerKey": "investments"
+        },
+        {
+            "DownstreamPathTemplate": "/api/products/{id}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                { "Host": "localhost", "Port": 5022 }
+            ],
+            "UpstreamPathTemplate": "/api/products/{id}",
+            "UpstreamHttpMethod": [ "GET" ],
+            "SwaggerKey": "investments"
+        },
+        {
+            "DownstreamPathTemplate": "/api/products",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                { "Host": "localhost", "Port": 5022 }
+            ],
+            "UpstreamPathTemplate": "/api/products",
+            "UpstreamHttpMethod": [ "POST" ],
+            "SwaggerKey": "investments"
+        },
+        {
+            "DownstreamPathTemplate": "/api/products/{id}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                { "Host": "localhost", "Port": 5022 }
+            ],
+            "UpstreamPathTemplate": "/api/products/{id}",
+            "UpstreamHttpMethod": [ "PUT" ],
+            "SwaggerKey": "investments"
+        },
+        {
+            "DownstreamPathTemplate": "/api/products/{id}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                { "Host": "localhost", "Port": 5022 }
+            ],
+            "UpstreamPathTemplate": "/api/products/{id}",
+            "UpstreamHttpMethod": [ "DELETE" ],
+            "SwaggerKey": "investments"
+        }
+    ],
+    "SwaggerEndPoints": [
+        {
+            "Key": "auth",
+            "Config": [
+                { "Name": "Auth API", "Version": "v1", "Url": "http://localhost:5181/openapi/v1.json" }
+            ]
+        },
+        {
+            "Key": "investments",
+            "Config": [
+                { "Name": "Investments API", "Version": "v1", "Url": "http://localhost:5022/openapi/v1.json" }
+            ]
+        }
+    ],
+    "GlobalConfiguration": {
+        "BaseUrl": "https://localhost:5273"
+    }
+}

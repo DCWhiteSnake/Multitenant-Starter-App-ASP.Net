@@ -1,0 +1,45 @@
+﻿namespace Inlaks.MultitenantStarter.Auth.Infrastructure
+{
+    /// <summary>
+    /// Model classes for Redis cache operations and responses.
+    /// </summary>
+    public class RadisCacheModel
+    {
+        /// <summary>
+        /// Represents a cache key-value pair for storing data in Redis.
+        /// </summary>
+        public class CacheKeyVal
+        {
+            /// <summary>
+            /// Gets or sets the cache key.
+            /// </summary>
+            public required string key { get; set; }
+            
+            /// <summary>
+            /// Gets or sets the cache value.
+            /// </summary>
+            public required string value { get; set; }
+        }
+
+        /// <summary>
+        /// Represents a cache response structure containing expiration and data information.
+        /// </summary>
+        public class CacheResponse
+        {
+            /// <summary>
+            /// Gets or sets the absolute expiration value.
+            /// </summary>
+            public required string absexp { get; set; }
+            
+            /// <summary>
+            /// Gets or sets the cached data.
+            /// </summary>
+            public required string data { get; set; }
+            
+            /// <summary>
+            /// Gets or sets the sliding expiration value.
+            /// </summary>
+            public required string sldexp { get; set; }
+        }
+    }
+}

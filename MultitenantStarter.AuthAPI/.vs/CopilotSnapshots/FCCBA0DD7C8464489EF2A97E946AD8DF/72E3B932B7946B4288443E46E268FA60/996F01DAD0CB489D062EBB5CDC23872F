@@ -1,0 +1,84 @@
+﻿namespace Inlaks.MultitenantStarter.Auth.Infrastructure
+{
+    /// <summary>
+    /// Service class for Redis cache operations that provides a higher-level abstraction over the repository.
+    /// </summary>
+    public class RedisCacheService
+    {
+        private readonly IRedisCacheRepository _redisCacheRepository;
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RedisCacheService"/> class.
+        /// </summary>
+        /// <param name="redisCacheRepository">The Redis cache repository instance.</param>
+        public RedisCacheService(IRedisCacheRepository redisCacheRepository)
+        {
+            _redisCacheRepository = redisCacheRepository ?? throw new ArgumentNullException(nameof(redisCacheRepository));
+        }
+        
+        /// <summary>
+        /// Deletes all cache keys that match the specified search pattern.
+        /// </summary>
+        /// <param name="search">The search pattern to match against cache keys.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the operation succeeds.</returns>
+        public async Task<bool> DeleteKeysAsync(string search, CancellationToken cancellationToken = default)
+        {
+            return await _redisCacheRepository.DeleteKeysAsync(search, cancellationToken);
+        }
+
+        /// <summary>
+        /// Fetches all cache keys that match the specified search pattern.
+        /// </summary>
+        /// <param name="search">The search pattern to match against cache keys.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a list of matching cache key names.</returns>
+        public async Task<List<string>> FetchKeysAsync(string search, CancellationToken cancellationToken = default)
+        {
+            return await _redisCacheRepository.FetchKeysAsync(search, cancellationToken);
+        }
+
+        /// <summary>
+        /// Retrieves the cached value for the specified key.
+        /// </summary>
+        /// <param name="key">The cache key to retrieve the value for.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the cached string value, or null if the key does not exist.</returns>
+        public async Task<string?> GetAsync(string key, CancellationToken cancellationToken = default)
+        {
+            return await _redisCacheRepository.GetAsync(key, cancellationToken);
+        }
+
+        /// <summary>
+        /// Retrieves all cache keys from the Redis database.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a list of all cache key names.</returns>
+        public async Task<List<string>> GetAllKeysAsync(CancellationToken cancellationToken = default)
+        {
+            return await _redisCacheRepository.GetAllKeysAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Refreshes the sliding expiration timeout for the specified cache key.
+        /// </summary>
+        /// <param name="key">The cache key to refresh.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the refresh succeeds, false otherwise.</returns>
+        public async Task<bool> RefreshAsync(string key, CancellationToken cancellationToken = default)
+        {
+            return await _redisCacheRepository.RefreshAsync(key, cancellationToken);
+        }
+
+        /// <summary>
+        /// Sets a key-value pair in the Redis cache with configured expiration settings.
+        /// </summary>
+        /// <param name="payload">The cache key-value payload containing the key and value to store.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the operation succeeds.</returns>
+        public async Task<bool> SetAsync(RadisCacheModel.CacheKeyVal payload, CancellationToken cancellationToken = default)
+        {
+            return await _redisCacheRepository.SetAsync(payload, cancellationToken);
+        }
+    }
+}

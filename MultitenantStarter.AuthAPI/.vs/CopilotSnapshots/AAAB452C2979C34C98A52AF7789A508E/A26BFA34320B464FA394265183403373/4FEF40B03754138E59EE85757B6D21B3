@@ -1,0 +1,75 @@
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+
+namespace Inlaks.MultitenantStarter.TenantService
+{
+    public class TenantRegistryService
+    {
+        private readonly TenantDbContext _tenantDbContext;
+
+        public TenantRegistryService()
+        {
+            var factory = new TenantDbContextFactory("Server=.;Database=TenantDb;Trusted_Connection=True;TrustServerCertificate=True;");
+            _tenantDbContext = factory.CreateDbContext();
+            _tenantDbContext.Database.EnsureCreated();
+        }
+
+        public string GetConnectionString(Guid tenantId, string apiKey)
+        {
+            var tenant = _tenantDbContext.Tenants.FirstOrDefault(t => t.Id == tenantId && t.ApiKey == apiKey) ?? throw new Exception("Tenant not found");
+            return tenant.ConnectionString;
+        }
+
+        public bool RegisterTenant(Tenant tenant)
+        {
+            // Ensure tenant has an Id
+            if (tenant.Id == Guid.Empty)
+            {
+                tenant.Id = Guid.NewGuid();
+            }
+
+            // 1. Create the tenant's database if it does not exist
+            var tenantConnBuilder = new SqlConnectionStringBuilder(tenant.ConnectionString);
+            var databaseName = tenantConnBuilder.InitialCatalog;
+
+            // connect to master to create DB
+            var masterConnBuilder = new SqlConnectionStringBuilder(tenant.ConnectionString)
+            {
+                InitialCatalog = "master"
+            };
+
+            using (var sqlConn = new SqlConnection(masterConnBuilder.ToString()))
+            {
+                sqlConn.Open();
+                using var cmd = sqlConn.CreateCommand();
+                cmd.CommandText = $"IF DB_ID(@db) IS NULL BEGIN EXEC('CREATE DATABASE [' + @db + ']') END";
+                cmd.Parameters.AddWithValue("@db", databaseName);
+                cmd.ExecuteNonQuery();
+            }
+
+            // 2. Initialize Identity schema in the tenant DB
+            var optionsBuilder = new DbContextOptionsBuilder<TenantAppIdentityDbContext>();
+            optionsBuilder.UseSqlServer(tenant.ConnectionString);
+            using (var identityDb = new TenantAppIdentityDbContext(optionsBuilder.Options))
+            {
+                identityDb.Database.EnsureCreated();
+
+                // 3. Seed default ASP.NET user (username = PartnerName -> using tenant.Name here)
+                var hasher = new PasswordHasher<SeedApplicationUser>();
+                var userName = tenant.Name;
+                var user = identityDb.Users.FirstOrDefault(u => u.UserName == userName);
+                if (user == null)
+                {
+                    user = new SeedApplicationUser
+                    {
+                        Id = Guid.NewGuid(),
+                        UserName = userName,
+                        NormalizedUserName = userName.ToUpperInvariant(),
+                        Email = null,
+                        NormalizedEmail = null,
+                        EmailConfirmed = true,
+                        SecurityStamp = Guid.NewGuid().ToString("N"),
+                        TenantId = tenant.Id
+                    };
+                    user.PasswordHash = hasher.HashPassword(user, "Secret
